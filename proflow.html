@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ProFlow — Productivity Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0c12;
+    --bg2: #111420;
+    --bg3: #171b28;
+    --card: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --accent: #f5a623;
+    --accent2: #ff6b6b;
+    --accent3: #4ecdc4;
+    --accent4: #a78bfa;
+    --text: #e8eaf0;
+    --text2: #8892a4;
+    --text3: #535b6e;
+    --green: #22d3a0;
+    --red: #ff5e5e;
+    --blue: #3b9eff;
+    --font: 'Syne', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+    --body: 'DM Sans', sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--body);overflow:hidden;}
+  ::-webkit-scrollbar{width:4px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+  /* LAYOUT */
+  .app{display:flex;height:100vh;overflow:hidden;}
+  .sidebar{width:230px;min-width:230px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 0;z-index:10;}
+  .main{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+
+  /* SIDEBAR */
+  .logo{padding:0 20px 24px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);margin-bottom:16px;}
+  .logo-icon{width:34px;height:34px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+  .logo-text{font-family:var(--font);font-size:18px;font-weight:800;letter-spacing:-.5px;}
+  .logo-text span{color:var(--accent);}
+  .nav-label{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--text3);padding:8px 20px 6px;font-family:var(--font);font-weight:700;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;border-radius:0;transition:all .2s;font-size:13.5px;color:var(--text2);font-weight:500;position:relative;margin:1px 8px;border-radius:8px;}
+  .nav-item:hover{background:var(--card);color:var(--text);}
+  .nav-item.active{background:rgba(245,166,35,.12);color:var(--accent);}
+  .nav-item.active::before{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--accent);border-radius:0 2px 2px 0;}
+  .nav-icon{font-size:16px;width:20px;text-align:center;}
+  .nav-badge{margin-left:auto;background:var(--accent);color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:20px;font-family:var(--font);}
+  .sidebar-bottom{margin-top:auto;padding:16px 8px 0;border-top:1px solid var(--border);}
+  .user-card{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border-radius:10px;cursor:pointer;}
+  .avatar{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#000;font-family:var(--font);}
+  .user-info p{font-size:12.5px;font-weight:600;}
+  .user-info span{font-size:10.5px;color:var(--text3);}
+
+  /* TOPBAR */
+  .topbar{padding:16px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2);}
+  .page-title{font-family:var(--font);font-size:20px;font-weight:800;}
+  .topbar-right{display:flex;align-items:center;gap:10px;}
+  .btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-family:var(--font);font-size:12.5px;font-weight:700;transition:all .2s;display:flex;align-items:center;gap:6px;}
+  .btn-primary{background:var(--accent);color:#000;}
+  .btn-primary:hover{background:#ffb94d;transform:translateY(-1px);}
+  .btn-ghost{background:var(--card);color:var(--text2);border:1px solid var(--border);}
+  .btn-ghost:hover{color:var(--text);background:rgba(255,255,255,.08);}
+  .btn-sm{padding:6px 12px;font-size:11.5px;}
+  .btn-danger{background:rgba(255,94,94,.15);color:var(--red);border:1px solid rgba(255,94,94,.3);}
+
+  /* CONTENT */
+  .content{flex:1;overflow-y:auto;padding:24px 28px;}
+  .page{display:none;animation:fadeIn .3s ease;}
+  .page.active{display:block;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+  /* CARDS */
+  .card{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:20px;}
+  .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .card-title{font-family:var(--font);font-size:14px;font-weight:700;color:var(--text);}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+
+  /* STAT CARDS */
+  .stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:18px 20px;}
+  .stat-label{font-size:11.5px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-family:var(--font);font-weight:700;}
+  .stat-val{font-family:var(--font);font-size:30px;font-weight:800;margin:6px 0 2px;line-height:1;}
+  .stat-sub{font-size:12px;color:var(--text2);}
+  .stat-icon{font-size:22px;margin-bottom:8px;}
+
+  /* INPUTS */
+  input,textarea,select{background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--body);font-size:13.5px;padding:9px 13px;outline:none;transition:border .2s;}
+  input:focus,textarea:focus,select:focus{border-color:var(--accent);}
+  input::placeholder,textarea::placeholder{color:var(--text3);}
+  select option{background:var(--bg2);}
+  .input-row{display:flex;gap:8px;}
+
+  /* TAGS */
+  .tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;font-family:var(--font);}
+  .tag-amber{background:rgba(245,166,35,.15);color:var(--accent);}
+  .tag-red{background:rgba(255,94,94,.15);color:var(--red);}
+  .tag-green{background:rgba(34,211,160,.15);color:var(--green);}
+  .tag-blue{background:rgba(59,158,255,.15);color:var(--blue);}
+  .tag-purple{background:rgba(167,139,250,.15);color:var(--accent4);}
+  .tag-teal{background:rgba(78,205,196,.15);color:var(--accent3);}
+
+  /* DIVIDER */
+  .divider{height:1px;background:var(--border);margin:16px 0;}
+
+  /* BADGE DOT */
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .dot-amber{background:var(--accent);}
+  .dot-red{background:var(--red);}
+  .dot-green{background:var(--green);}
+  .dot-blue{background:var(--blue);}
+
+  /* ======= DASHBOARD ======= */
+  .welcome-banner{background:linear-gradient(135deg,rgba(245,166,35,.1),rgba(255,107,107,.08));border:1px solid rgba(245,166,35,.2);border-radius:16px;padding:22px 28px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;}
+  .welcome-text h2{font-family:var(--font);font-size:22px;font-weight:800;margin-bottom:4px;}
+  .welcome-text p{color:var(--text2);font-size:13.5px;}
+  .welcome-art{font-size:40px;opacity:.8;}
+  .progress-bar{height:6px;background:var(--bg2);border-radius:3px;overflow:hidden;margin-top:8px;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .5s ease;}
+  .quick-task-row{display:flex;align-items:center;gap:8px;}
+  .quick-task-row input{flex:1;}
+  .activity-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+  .activity-item:last-child{border-bottom:none;}
+  .activity-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+
+  /* ======= TO-DO ======= */
+  .todo-toolbar{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
+  .todo-toolbar input{flex:1;min-width:200px;}
+  .filter-tabs{display:flex;gap:4px;background:var(--bg3);padding:4px;border-radius:10px;border:1px solid var(--border);}
+  .filter-tab{padding:5px 12px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:700;font-family:var(--font);color:var(--text2);transition:all .2s;}
+  .filter-tab.active{background:var(--accent);color:#000;}
+  .todo-item{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:11px;margin-bottom:8px;transition:all .2s;cursor:pointer;}
+  .todo-item:hover{border-color:rgba(245,166,35,.3);transform:translateX(2px);}
+  .todo-item.done{opacity:.5;}
+  .todo-item.done .todo-title{text-decoration:line-through;color:var(--text3);}
+  .todo-check{width:20px;height:20px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;margin-top:1px;transition:all .2s;}
+  .todo-check.checked{background:var(--green);border-color:var(--green);}
+  .todo-body{flex:1;}
+  .todo-title{font-size:13.5px;font-weight:500;margin-bottom:5px;}
+  .todo-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .todo-meta span{font-size:11px;color:var(--text3);}
+  .todo-actions{display:flex;gap:4px;opacity:0;transition:opacity .2s;}
+  .todo-item:hover .todo-actions{opacity:1;}
+  .icon-btn{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .2s;}
+  .icon-btn:hover{background:var(--card);color:var(--text);}
+  .todo-add-form{background:var(--bg3);border:1px solid rgba(245,166,35,.3);border-radius:12px;padding:16px;margin-bottom:16px;}
+  .form-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+  .form-row input,select{flex:1;min-width:120px;}
+  .priority-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+  .p-high{background:var(--red);}
+  .p-med{background:var(--accent);}
+  .p-low{background:var(--green);}
+  .subtask-list{margin-top:8px;padding-left:16px;}
+  .subtask-item{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px;color:var(--text2);}
+
+  /* ======= APP DEV HELPER ======= */
+  .devtool-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .snippet-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-family:var(--mono);font-size:12px;color:#a8d8a8;line-height:1.7;min-height:120px;overflow-x:auto;white-space:pre;position:relative;}
+  .snippet-copy{position:absolute;top:8px;right:8px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer;color:var(--text2);font-family:var(--font);font-weight:700;}
+  .snippet-copy:hover{color:var(--accent);}
+  .tech-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;background:var(--card);border:1px solid var(--border);border-radius:20px;font-size:11.5px;cursor:pointer;margin:3px;transition:all .2s;font-family:var(--font);font-weight:600;}
+  .tech-pill:hover{border-color:var(--accent);color:var(--accent);}
+  .tech-pill.selected{background:rgba(245,166,35,.15);border-color:var(--accent);color:var(--accent);}
+  .bug-item{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;}
+  .bug-status{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+  .status-open{background:var(--red);}
+  .status-progress{background:var(--accent);}
+  .status-done{background:var(--green);}
+  .code-keyword{color:#c792ea;}
+  .code-fn{color:#82aaff;}
+  .code-str{color:#c3e88d;}
+  .code-cmt{color:#546e7a;}
+
+  /* ======= POMODORO ======= */
+  .pomo-center{display:flex;flex-direction:column;align-items:center;gap:24px;}
+  .pomo-ring{width:220px;height:220px;position:relative;}
+  .pomo-ring svg{transform:rotate(-90deg);}
+  .pomo-ring circle{fill:none;stroke-width:10;stroke-linecap:round;}
+  .ring-bg{stroke:var(--bg3);}
+  .ring-fill{stroke:var(--accent);transition:stroke-dashoffset .5s linear;}
+  .pomo-time{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+  .pomo-time .time{font-family:var(--mono);font-size:42px;font-weight:700;line-height:1;}
+  .pomo-time .mode{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:2px;margin-top:4px;font-family:var(--font);}
+  .pomo-controls{display:flex;gap:10px;}
+  .pomo-btn{width:48px;height:48px;border-radius:50%;border:none;cursor:pointer;font-size:18px;transition:all .2s;display:flex;align-items:center;justify-content:center;}
+  .pomo-btn-main{background:var(--accent);color:#000;width:60px;height:60px;font-size:22px;}
+  .pomo-btn-main:hover{transform:scale(1.08);}
+  .pomo-btn-sec{background:var(--bg3);color:var(--text2);border:1px solid var(--border);}
+  .pomo-btn-sec:hover{color:var(--text);}
+  .pomo-sessions{display:flex;gap:8px;}
+  .pomo-dot{width:12px;height:12px;border-radius:50%;background:var(--bg3);border:1.5px solid var(--border);}
+  .pomo-dot.done{background:var(--accent);border-color:var(--accent);}
+  .pomo-log{max-height:180px;overflow-y:auto;}
+  .pomo-log-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px;}
+  .pomo-log-item:last-child{border-bottom:none;}
+  .pomo-modes{display:flex;gap:6px;margin-bottom:20px;}
+  .pomo-mode-btn{flex:1;padding:8px;text-align:center;background:var(--bg3);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;font-family:var(--font);color:var(--text2);transition:all .2s;}
+  .pomo-mode-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(245,166,35,.08);}
+
+  /* ======= NOTES ======= */
+  .notes-layout{display:grid;grid-template-columns:240px 1fr;gap:16px;height:calc(100vh - 160px);}
+  .notes-list{display:flex;flex-direction:column;gap:6px;overflow-y:auto;}
+  .note-card{padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .2s;}
+  .note-card:hover{border-color:rgba(245,166,35,.3);}
+  .note-card.active{border-color:var(--accent);background:rgba(245,166,35,.06);}
+  .note-card-title{font-size:13px;font-weight:600;margin-bottom:4px;font-family:var(--font);}
+  .note-card-preview{font-size:11px;color:var(--text3);line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+  .note-date{font-size:10px;color:var(--text3);margin-top:6px;font-family:var(--mono);}
+  .note-editor{display:flex;flex-direction:column;background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  .note-editor-toolbar{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;}
+  .fmt-btn{padding:4px 9px;background:transparent;border:1px solid var(--border);border-radius:5px;color:var(--text2);cursor:pointer;font-size:11.5px;font-weight:700;transition:all .2s;font-family:var(--mono);}
+  .fmt-btn:hover{color:var(--accent);border-color:var(--accent);}
+  .note-title-input{border:none;border-bottom:1px solid var(--border);border-radius:0;font-family:var(--font);font-size:18px;font-weight:700;padding:16px 18px;}
+  #noteContent{border:none;border-radius:0;flex:1;resize:none;font-size:13.5px;line-height:1.8;padding:14px 18px;min-height:300px;}
+
+  /* ======= HABIT TRACKER ======= */
+  .habit-item{display:flex;align-items:center;gap:12px;padding:13px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:11px;margin-bottom:8px;}
+  .habit-icon{font-size:20px;width:38px;height:38px;background:var(--bg2);border-radius:9px;display:flex;align-items:center;justify-content:center;}
+  .habit-name{font-size:13.5px;font-weight:600;font-family:var(--font);}
+  .habit-streak{font-size:11px;color:var(--text3);}
+  .habit-week{display:flex;gap:5px;margin-left:auto;}
+  .habit-day{width:28px;height:28px;border-radius:6px;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3);cursor:pointer;transition:all .2s;font-family:var(--font);font-weight:700;}
+  .habit-day.done{background:rgba(34,211,160,.2);border-color:var(--green);color:var(--green);}
+  .habit-day.today{border-color:var(--accent);}
+  .heatmap{display:grid;grid-template-columns:repeat(52,1fr);gap:2px;margin-top:8px;}
+  .heat-cell{width:10px;height:10px;border-radius:2px;background:var(--bg2);}
+  .heat-cell.l1{background:rgba(34,211,160,.25);}
+  .heat-cell.l2{background:rgba(34,211,160,.5);}
+  .heat-cell.l3{background:rgba(34,211,160,.75);}
+  .heat-cell.l4{background:var(--green);}
+
+  /* ======= GOALS ======= */
+  .goal-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:12px;}
+  .goal-header{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+  .goal-icon{font-size:22px;}
+  .goal-title{font-family:var(--font);font-size:15px;font-weight:700;}
+  .goal-deadline{font-size:11.5px;color:var(--text3);}
+  .goal-progress-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .goal-progress-bar{flex:1;height:8px;background:var(--bg2);border-radius:4px;overflow:hidden;}
+  .goal-progress-fill{height:100%;border-radius:4px;transition:width .5s;}
+  .goal-pct{font-family:var(--mono);font-size:13px;font-weight:700;min-width:35px;text-align:right;}
+  .milestone-item{display:flex;align-items:center;gap:8px;padding:7px 0;font-size:12.5px;border-bottom:1px solid var(--border);}
+  .milestone-item:last-child{border-bottom:none;}
+  .milestone-check{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:9px;flex-shrink:0;transition:all .2s;}
+  .milestone-check.done{background:var(--green);border-color:var(--green);color:#000;}
+
+  /* ======= QUICK LINKS ======= */
+  .link-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  .link-card{background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:16px;text-align:center;cursor:pointer;transition:all .2s;text-decoration:none;display:block;}
+  .link-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+  .link-icon{font-size:26px;margin-bottom:8px;}
+  .link-name{font-size:12px;font-weight:700;font-family:var(--font);color:var(--text);}
+  .link-url{font-size:10px;color:var(--text3);margin-top:2px;}
+  .link-cat{font-size:10px;font-family:var(--font);font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);margin:20px 0 10px;}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:100;display:none;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px;width:460px;max-width:95vw;}
+  .modal-title{font-family:var(--font);font-size:17px;font-weight:800;margin-bottom:18px;}
+  .modal-row{margin-bottom:12px;}
+  .modal-row label{display:block;font-size:11.5px;font-weight:700;font-family:var(--font);color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
+  .modal-row input,.modal-row select,.modal-row textarea{width:100%;}
+  .modal-row textarea{resize:vertical;min-height:80px;}
+  .modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+
+  /* TOAST */
+  .toast-container{position:fixed;bottom:24px;right:24px;z-index:200;display:flex;flex-direction:column;gap:8px;}
+  .toast{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:11px 16px;font-size:13px;display:flex;align-items:center;gap:10px;min-width:240px;animation:slideIn .3s ease;box-shadow:0 8px 32px rgba(0,0,0,.4);}
+  .toast.success{border-color:rgba(34,211,160,.4);}
+  .toast.warning{border-color:rgba(245,166,35,.4);}
+  @keyframes slideIn{from{opacity:0;transform:translateX(30px);}to{opacity:1;transform:translateX(0);}}
+
+  /* SEARCH BOX */
+  .search-box{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:7px 12px;min-width:200px;}
+  .search-box input{border:none;background:transparent;font-size:13px;padding:0;width:140px;}
+  .search-icon{color:var(--text3);font-size:13px;}
+
+  /* SCROLLABLE CONTENT AREA */
+  .scroll-area{overflow-y:auto;height:100%;}
+
+  /* COLOR ACCENT HEADERS */
+  h3.section-title{font-family:var(--font);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);margin:20px 0 10px;}
+
+  /* DEV tools specific */
+  .arch-node{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px;font-family:var(--mono);display:inline-block;margin:3px;}
+  .arch-arrow{color:var(--text3);margin:0 4px;}
+
+  .empty-state{text-align:center;padding:40px 20px;color:var(--text3);}
+  .empty-state .empty-icon{font-size:36px;margin-bottom:10px;}
+  .empty-state p{font-size:13.5px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <div class="logo-text">Pro<span>Flow</span></div>
+  </div>
+
+  <div class="nav-label">Workspace</div>
+  <div class="nav-item active" onclick="navigate('dashboard',this)"><span class="nav-icon">🏠</span>Dashboard</div>
+  <div class="nav-item" onclick="navigate('todo',this)"><span class="nav-icon">✅</span>To-Do List <span class="nav-badge" id="todoBadge">0</span></div>
+  <div class="nav-item" onclick="navigate('devhelper',this)"><span class="nav-icon">🛠️</span>App Dev Helper</div>
+  <div class="nav-item" onclick="navigate('pomodoro',this)"><span class="nav-icon">⏱️</span>Pomodoro</div>
+
+  <div class="nav-label" style="margin-top:8px;">Organize</div>
+  <div class="nav-item" onclick="navigate('notes',this)"><span class="nav-icon">📝</span>Notes</div>
+  <div class="nav-item" onclick="navigate('habits',this)"><span class="nav-icon">🔥</span>Habit Tracker</div>
+  <div class="nav-item" onclick="navigate('goals',this)"><span class="nav-icon">🎯</span>Goal Planner</div>
+  <div class="nav-item" onclick="navigate('links',this)"><span class="nav-icon">🔗</span>Quick Links</div>
+
+  <div class="sidebar-bottom">
+    <div class="user-card">
+      <div class="avatar">PF</div>
+      <div class="user-info">
+        <p>ProFlow User</p>
+        <span>Free Plan</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">Dashboard</div>
+    <div class="topbar-right">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="Search anything…" id="globalSearch"/>
+      </div>
+      <button class="btn btn-ghost" onclick="showModal('quickAddModal')">+ Quick Add</button>
+      <button class="btn btn-primary" id="topbarAction" onclick="handleTopbarAction()">+ New Task</button>
+    </div>
+  </div>
+
+  <div class="content" id="mainContent">
+
+    <!-- ===== DASHBOARD ===== -->
+    <div class="page active" id="page-dashboard">
+      <div class="welcome-banner">
+        <div class="welcome-text">
+          <h2>Good day! 👋 Let's build something great.</h2>
+          <p>You have <strong id="dashPending">0</strong> tasks pending · <strong id="dashDone">0</strong> completed today</p>
+          <div style="margin-top:12px;display:flex;align-items:center;gap:10px;">
+            <div style="flex:1;max-width:260px;">
+              <div style="font-size:11px;color:var(--text3);margin-bottom:4px;font-family:var(--font);font-weight:700;">TODAY'S PROGRESS</div>
+              <div class="progress-bar"><div class="progress-fill" id="dashProgress" style="width:0%"></div></div>
+            </div>
+            <div style="font-family:var(--mono);font-size:14px;font-weight:700;" id="dashPct">0%</div>
+          </div>
+        </div>
+        <div class="welcome-art">🚀</div>
+      </div>
+
+      <div class="grid4" style="margin-bottom:20px;">
+        <div class="stat-card">
+          <div class="stat-icon">✅</div>
+          <div class="stat-label">Tasks Done</div>
+          <div class="stat-val" id="statDone">0</div>
+          <div class="stat-sub">All time</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🔥</div>
+          <div class="stat-label">Streak</div>
+          <div class="stat-val" style="color:var(--accent);" id="statStreak">1</div>
+          <div class="stat-sub">Day streak</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⏱️</div>
+          <div class="stat-label">Focus Time</div>
+          <div class="stat-val" style="color:var(--accent3);" id="statFocus">0</div>
+          <div class="stat-sub">Pomodoros</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📝</div>
+          <div class="stat-label">Notes</div>
+          <div class="stat-val" style="color:var(--accent4);" id="statNotes">0</div>
+          <div class="stat-sub">Saved</div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">⚡ Quick Add Task</div>
+          </div>
+          <div class="quick-task-row" style="margin-bottom:10px;">
+            <input type="text" id="quickTaskInput" placeholder="What needs to be done?" style="flex:1;"/>
+            <button class="btn btn-primary btn-sm" onclick="quickAddTask()">Add</button>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <select id="quickPriority" style="flex:1;">
+              <option value="high">🔴 High</option>
+              <option value="med" selected>🟡 Medium</option>
+              <option value="low">🟢 Low</option>
+            </select>
+            <input type="date" id="quickDue" style="flex:1;"/>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">📋 Upcoming Tasks</div><span style="font-size:12px;color:var(--text3);cursor:pointer;" onclick="navigate('todo',document.querySelector('.nav-item:nth-child(2)'))">View all →</span></div>
+          <div id="dashTasks">
+            <div class="empty-state"><div class="empty-icon">✨</div><p>No tasks yet. Add one!</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:16px;">
+        <div class="card">
+          <div class="card-header"><div class="card-title">🔥 Today's Habits</div></div>
+          <div id="dashHabits">
+            <div class="empty-state" style="padding:20px 0;"><p>No habits tracked yet.</p></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">📌 Pinned Notes</div></div>
+          <div id="dashNotes">
+            <div class="empty-state" style="padding:20px 0;"><p>No pinned notes.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TO-DO ===== -->
+    <div class="page" id="page-todo">
+      <div class="todo-toolbar">
+        <input type="text" id="todoSearch" placeholder="Search tasks…" style="max-width:240px;" oninput="renderTodos()"/>
+        <div class="filter-tabs">
+          <div class="filter-tab active" onclick="setFilter('all',this)">All</div>
+          <div class="filter-tab" onclick="setFilter('active',this)">Active</div>
+          <div class="filter-tab" onclick="setFilter('done',this)">Done</div>
+        </div>
+        <select id="priorityFilter" onchange="renderTodos()" style="width:130px;">
+          <option value="">All Priorities</option>
+          <option value="high">🔴 High</option>
+          <option value="med">🟡 Medium</option>
+          <option value="low">🟢 Low</option>
+        </select>
+        <select id="tagFilter" onchange="renderTodos()" style="width:120px;">
+          <option value="">All Tags</option>
+          <option value="work">Work</option>
+          <option value="personal">Personal</option>
+          <option value="dev">Dev</option>
+          <option value="urgent">Urgent</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="openTodoModal()">+ New Task</button>
+      </div>
+
+      <div id="todoAddForm" style="display:none;" class="todo-add-form">
+        <div class="form-row">
+          <input type="text" id="newTodoTitle" placeholder="Task title…" style="flex:2;"/>
+          <select id="newTodoPriority">
+            <option value="high">🔴 High</option>
+            <option value="med" selected>🟡 Medium</option>
+            <option value="low">🟢 Low</option>
+          </select>
+          <select id="newTodoTag">
+            <option value="">No Tag</option>
+            <option value="work">Work</option>
+            <option value="personal">Personal</option>
+            <option value="dev">Dev</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <input type="text" id="newTodoDesc" placeholder="Description (optional)…" style="flex:2;"/>
+          <input type="date" id="newTodoDue"/>
+        </div>
+        <div class="form-row">
+          <input type="text" id="newSubtask" placeholder="Add subtask and press Enter…" style="flex:1;" onkeydown="if(event.key==='Enter')addSubtask()"/>
+        </div>
+        <div id="subtaskPreview"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="closeTodoForm()">Cancel</button>
+          <button class="btn btn-primary btn-sm" onclick="saveTodo()">Save Task</button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <div style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--text2);">
+          📊 Total: <strong id="countAll">0</strong> &nbsp;|&nbsp; Active: <strong id="countActive">0</strong> &nbsp;|&nbsp; Done: <strong id="countDone">0</strong>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="clearDone()">Clear Completed</button>
+      </div>
+
+      <div id="todoList"></div>
+    </div>
+
+    <!-- ===== APP DEV HELPER ===== -->
+    <div class="page" id="page-devhelper">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;">
+        <div class="filter-tabs">
+          <div class="filter-tab active" onclick="setDevTab('snippets',this)">Snippets</div>
+          <div class="filter-tab" onclick="setDevTab('planner',this)">Project Planner</div>
+          <div class="filter-tab" onclick="setDevTab('bugtracker',this)">Bug Tracker</div>
+          <div class="filter-tab" onclick="setDevTab('techstack',this)">Tech Stack</div>
+          <div class="filter-tab" onclick="setDevTab('apinotes',this)">API Notes</div>
+        </div>
+      </div>
+
+      <!-- Snippets -->
+      <div id="devtab-snippets">
+        <div class="devtool-grid">
+          <div class="card">
+            <div class="card-header"><div class="card-title">📦 Snippet Library</div><button class="btn btn-primary btn-sm" onclick="openSnippetModal()">+ Add Snippet</button></div>
+            <div id="snippetList">
+              <div class="snippet-item" style="margin-bottom:10px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                  <span style="font-size:12.5px;font-weight:700;font-family:var(--font);">Fetch API</span>
+                  <span class="tag tag-blue">JS</span>
+                </div>
+                <div class="snippet-box" style="position:relative;"><span class="code-keyword">const</span> <span class="code-fn">fetchData</span> = <span class="code-keyword">async</span> (url) => {
+  <span class="code-keyword">const</span> res = <span class="code-keyword">await</span> fetch(url);
+  <span class="code-keyword">return</span> res.json();
+};<button class="snippet-copy" onclick="copyCode(this)">Copy</button></div>
+              </div>
+              <div class="snippet-item">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                  <span style="font-size:12.5px;font-weight:700;font-family:var(--font);">useState Hook</span>
+                  <span class="tag tag-teal">React</span>
+                </div>
+                <div class="snippet-box" style="position:relative;"><span class="code-keyword">import</span> { useState } <span class="code-keyword">from</span> <span class="code-str">'react'</span>;
+
+<span class="code-keyword">const</span> [state, setState] = useState(null);<button class="snippet-copy" onclick="copyCode(this)">Copy</button></div>
+              </div>
+              <div id="customSnippets"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><div class="card-title">🔧 Code Generator</div></div>
+            <div style="margin-bottom:8px;"><label style="font-size:11.5px;color:var(--text3);font-family:var(--font);font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:5px;">Template Type</label>
+            <select id="codeGenType" style="width:100%;">
+              <option value="api">REST API Route (Node.js)</option>
+              <option value="component">React Component</option>
+              <option value="hook">Custom React Hook</option>
+              <option value="model">Database Model (Mongoose)</option>
+              <option value="auth">Auth Middleware</option>
+            </select></div>
+            <div style="margin-bottom:8px;"><input type="text" id="codeGenName" placeholder="Component / Function name…" style="width:100%;"/></div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:10px;" onclick="generateCode()">⚡ Generate Template</button>
+            <div class="snippet-box" style="position:relative;min-height:180px;" id="generatedCode"><span class="code-cmt">// Generated code will appear here…</span><button class="snippet-copy" onclick="copyCode(this)">Copy</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project Planner -->
+      <div id="devtab-planner" style="display:none;">
+        <div class="grid2">
+          <div class="card">
+            <div class="card-header"><div class="card-title">📋 Projects</div><button class="btn btn-primary btn-sm" onclick="openProjectModal()">+ New Project</button></div>
+            <div id="projectList">
+              <div style="padding:12px 0;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                  <span style="font-size:16px;">📱</span>
+                  <div style="flex:1;">
+                    <div style="font-size:13.5px;font-weight:700;font-family:var(--font);">Mobile App MVP</div>
+                    <div style="font-size:11.5px;color:var(--text3);">React Native · 8 tasks</div>
+                    <div class="progress-bar" style="margin-top:6px;"><div class="progress-fill" style="width:45%;"></div></div>
+                  </div>
+                  <span style="font-family:var(--mono);font-size:12px;color:var(--accent);">45%</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span style="font-size:16px;">🌐</span>
+                  <div style="flex:1;">
+                    <div style="font-size:13.5px;font-weight:700;font-family:var(--font);">Portfolio Website</div>
+                    <div style="font-size:11.5px;color:var(--text3);">Next.js · 5 tasks</div>
+                    <div class="progress-bar" style="margin-top:6px;"><div class="progress-fill" style="width:80%;background:linear-gradient(90deg,var(--green),var(--accent3));"></div></div>
+                  </div>
+                  <span style="font-family:var(--mono);font-size:12px;color:var(--green);">80%</span>
+                </div>
+              </div>
+              <div id="customProjects"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">📐 Architecture Notes</div></div>
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
+              <div style="font-size:11px;color:var(--text3);margin-bottom:10px;font-family:var(--font);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Sample Flow</div>
+              <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
+                <div class="arch-node">Client</div><span class="arch-arrow">→</span>
+                <div class="arch-node">API Gateway</div><span class="arch-arrow">→</span>
+                <div class="arch-node">Auth Service</div><span class="arch-arrow">→</span>
+                <div class="arch-node">DB</div>
+              </div>
+            </div>
+            <textarea placeholder="Jot down architecture ideas, flow notes, decisions…" style="width:100%;min-height:120px;resize:vertical;" id="archNotes"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bug Tracker -->
+      <div id="devtab-bugtracker" style="display:none;">
+        <div class="card">
+          <div class="card-header"><div class="card-title">🐛 Bug Tracker</div><button class="btn btn-primary btn-sm" onclick="openBugModal()">+ Report Bug</button></div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <div class="tag tag-red">🔴 Open: <span id="bugOpen">2</span></div>
+            <div class="tag tag-amber">🟡 In Progress: <span id="bugProg">1</span></div>
+            <div class="tag tag-green">🟢 Resolved: <span id="bugDone">1</span></div>
+          </div>
+          <div id="bugList">
+            <div class="bug-item"><div class="bug-status status-open"></div><div style="flex:1;"><div style="font-size:13.5px;font-weight:600;">Login fails on Safari</div><div style="font-size:11.5px;color:var(--text3);">Auth · High Priority · Reported 2 days ago</div></div><span class="tag tag-red">Open</span></div>
+            <div class="bug-item"><div class="bug-status status-progress"></div><div style="flex:1;"><div style="font-size:13.5px;font-weight:600;">Dark mode flicker on load</div><div style="font-size:11.5px;color:var(--text3);">UI · Medium Priority · Reported 1 day ago</div></div><span class="tag tag-amber">In Progress</span></div>
+            <div class="bug-item"><div class="bug-status status-open"></div><div style="flex:1;"><div style="font-size:13.5px;font-weight:600;">API rate limit not handled</div><div style="font-size:11.5px;color:var(--text3);">Backend · High Priority · Reported today</div></div><span class="tag tag-red">Open</span></div>
+            <div class="bug-item"><div class="bug-status status-done"></div><div style="flex:1;"><div style="font-size:13.5px;font-weight:600;">Typo in onboarding copy</div><div style="font-size:11.5px;color:var(--text3);">Content · Low Priority · Fixed</div></div><span class="tag tag-green">Resolved</span></div>
+          </div>
+          <div id="customBugs"></div>
+        </div>
+      </div>
+
+      <!-- Tech Stack -->
+      <div id="devtab-techstack" style="display:none;">
+        <div class="card">
+          <div class="card-header"><div class="card-title">🧰 Tech Stack Picker</div></div>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">Select technologies for your project stack. Click to toggle.</p>
+          <h3 class="section-title">Frontend</h3>
+          <div id="techFrontend"></div>
+          <h3 class="section-title">Backend</h3>
+          <div id="techBackend"></div>
+          <h3 class="section-title">Database</h3>
+          <div id="techDB"></div>
+          <h3 class="section-title">DevOps & Cloud</h3>
+          <div id="techDevOps"></div>
+          <div class="divider"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+            <div><span style="font-size:13px;color:var(--text2);">Selected Stack: </span><span id="selectedStack" style="font-family:var(--mono);font-size:12.5px;color:var(--accent);">None selected</span></div>
+            <button class="btn btn-primary btn-sm" onclick="copyStack()">Copy Stack</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- API Notes -->
+      <div id="devtab-apinotes" style="display:none;">
+        <div class="devtool-grid">
+          <div class="card">
+            <div class="card-header"><div class="card-title">🔌 API Endpoints</div><button class="btn btn-primary btn-sm" onclick="openApiModal()">+ Add Endpoint</button></div>
+            <div id="apiList">
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;"><span class="tag tag-green">GET</span><span style="font-family:var(--mono);font-size:12px;">/api/users</span><span style="margin-left:auto;font-size:11.5px;color:var(--text3);">Fetch all users</span></div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;"><span class="tag tag-amber">POST</span><span style="font-family:var(--mono);font-size:12px;">/api/auth/login</span><span style="margin-left:auto;font-size:11.5px;color:var(--text3);">User login</span></div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;"><span class="tag tag-blue">PUT</span><span style="font-family:var(--mono);font-size:12px;">/api/users/:id</span><span style="margin-left:auto;font-size:11.5px;color:var(--text3);">Update user</span></div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;"><span class="tag tag-red">DEL</span><span style="font-family:var(--mono);font-size:12px;">/api/users/:id</span><span style="margin-left:auto;font-size:11.5px;color:var(--text3);">Delete user</span></div>
+              <div id="customApis"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">📄 API Notes & Docs</div></div>
+            <textarea style="width:100%;min-height:220px;resize:vertical;font-family:var(--mono);font-size:12.5px;" id="apiNotes" placeholder="# API Documentation&#10;&#10;Base URL: https://api.example.com&#10;Auth: Bearer token&#10;&#10;## Headers&#10;Content-Type: application/json&#10;Authorization: Bearer {token}"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== POMODORO ===== -->
+    <div class="page" id="page-pomodoro">
+      <div class="grid2">
+        <div class="card" style="display:flex;flex-direction:column;align-items:center;padding:32px 20px;">
+          <div class="pomo-modes">
+            <div class="pomo-mode-btn active" onclick="setPomoMode('focus',this)">🍅 Focus</div>
+            <div class="pomo-mode-btn" onclick="setPomoMode('short',this)">☕ Short Break</div>
+            <div class="pomo-mode-btn" onclick="setPomoMode('long',this)">🌙 Long Break</div>
+          </div>
+          <div class="pomo-center">
+            <div class="pomo-sessions" id="pomoSessions">
+              <div class="pomo-dot done"></div>
+              <div class="pomo-dot done"></div>
+              <div class="pomo-dot"></div>
+              <div class="pomo-dot"></div>
+            </div>
+            <div class="pomo-ring">
+              <svg width="220" height="220" viewBox="0 0 220 220">
+                <circle class="ring-bg" cx="110" cy="110" r="96" stroke-dasharray="603" stroke-dashoffset="0"/>
+                <circle class="ring-fill" cx="110" cy="110" r="96" stroke-dasharray="603" stroke-dashoffset="0" id="pomRing"/>
+              </svg>
+              <div class="pomo-time">
+                <div class="time" id="pomoTime">25:00</div>
+                <div class="mode" id="pomoModeLabel">FOCUS</div>
+              </div>
+            </div>
+            <div class="pomo-controls">
+              <button class="pomo-btn pomo-btn-sec" onclick="resetPomo()">↺</button>
+              <button class="pomo-btn pomo-btn-main" onclick="togglePomo()" id="pomoPlayBtn">▶</button>
+              <button class="pomo-btn pomo-btn-sec" onclick="skipPomo()">⏭</button>
+            </div>
+          </div>
+          <div style="margin-top:20px;text-align:center;padding:12px 20px;background:var(--bg2);border-radius:10px;border:1px solid var(--border);width:100%;">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:4px;font-family:var(--font);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Current Task</div>
+            <input type="text" id="pomoTask" placeholder="What are you working on?" style="border:none;background:transparent;text-align:center;font-size:14px;width:100%;color:var(--text);"/>
+          </div>
+        </div>
+
+        <div>
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header"><div class="card-title">⚙️ Timer Settings</div></div>
+            <div class="grid2" style="gap:10px;">
+              <div><label style="font-size:11px;color:var(--text3);font-family:var(--font);font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px;">Focus (min)</label><input type="number" id="focusDur" value="25" min="1" max="60" style="width:100%;" onchange="updateDurations()"/></div>
+              <div><label style="font-size:11px;color:var(--text3);font-family:var(--font);font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px;">Short Break (min)</label><input type="number" id="shortDur" value="5" min="1" max="30" style="width:100%;" onchange="updateDurations()"/></div>
+              <div><label style="font-size:11px;color:var(--text3);font-family:var(--font);font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px;">Long Break (min)</label><input type="number" id="longDur" value="15" min="5" max="60" style="width:100%;" onchange="updateDurations()"/></div>
+              <div><label style="font-size:11px;color:var(--text3);font-family:var(--font);font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px;">Sessions to Long</label><input type="number" id="sessCount" value="4" min="2" max="8" style="width:100%;"/></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">📊 Session Log</div></div>
+            <div class="pomo-log" id="pomoLog">
+              <div style="text-align:center;color:var(--text3);font-size:12.5px;padding:20px 0;">No sessions yet. Start focusing!</div>
+            </div>
+            <div class="divider"></div>
+            <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--text2);">
+              <span>Total sessions today: <strong id="totalSessions">0</strong></span>
+              <span>Focus time: <strong id="totalFocusTime">0 min</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== NOTES ===== -->
+    <div class="page" id="page-notes">
+      <div class="notes-layout">
+        <div style="display:flex;flex-direction:column;gap:8px;overflow:hidden;">
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="noteSearch" placeholder="Search notes…" style="flex:1;" oninput="renderNotes()"/>
+            <button class="btn btn-primary btn-sm" onclick="createNote()">+</button>
+          </div>
+          <div class="notes-list" id="notesList"></div>
+        </div>
+        <div class="note-editor">
+          <div class="note-editor-toolbar">
+            <button class="fmt-btn" onclick="fmtNote('**','**')"><b>B</b></button>
+            <button class="fmt-btn" onclick="fmtNote('*','*')"><i>I</i></button>
+            <button class="fmt-btn" onclick="fmtNote('~~','~~')"><s>S</s></button>
+            <button class="fmt-btn" onclick="fmtNote('`','`')">&#96;</button>
+            <button class="fmt-btn" onclick="fmtNote('# ','')">H1</button>
+            <button class="fmt-btn" onclick="fmtNote('## ','')">H2</button>
+            <button class="fmt-btn" onclick="fmtNote('- ','')">• List</button>
+            <button class="fmt-btn" onclick="fmtNote('> ','')">Quote</button>
+            <button class="fmt-btn" onclick="fmtNote('```\n','\n```')">Code</button>
+            <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
+              <button class="fmt-btn" onclick="pinNote()" id="pinBtn">📌 Pin</button>
+              <button class="fmt-btn" onclick="deleteNote()" style="color:var(--red);">🗑️ Delete</button>
+              <button class="btn btn-primary btn-sm" onclick="saveNote()">Save</button>
+            </div>
+          </div>
+          <input type="text" class="note-title-input" id="noteTitle" placeholder="Note title…"/>
+          <textarea id="noteContent" placeholder="Start writing… supports markdown-style formatting"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== HABITS ===== -->
+    <div class="page" id="page-habits">
+      <div style="display:flex;gap:10px;margin-bottom:20px;align-items:center;">
+        <div style="flex:1;">
+          <div style="font-size:13px;color:var(--text2);">Track daily habits and build streaks. Click a day to mark it done.</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openHabitModal()">+ New Habit</button>
+      </div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header"><div class="card-title">📅 This Week</div><div style="display:flex;gap:6px;">${['M','T','W','T','F','S','S'].map(d=>`<span style="width:28px;text-align:center;font-size:10px;font-family:var(--font);font-weight:700;color:var(--text3);">${d}</span>`).join('')}</div></div>
+        <div id="habitList"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">📈 Yearly Activity Heatmap</div></div>
+        <div class="heatmap" id="heatmap"></div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:11px;color:var(--text3);">
+          <span>Less</span>
+          <div class="heat-cell" style="width:10px;height:10px;"></div>
+          <div class="heat-cell l1" style="width:10px;height:10px;"></div>
+          <div class="heat-cell l2" style="width:10px;height:10px;"></div>
+          <div class="heat-cell l3" style="width:10px;height:10px;"></div>
+          <div class="heat-cell l4" style="width:10px;height:10px;"></div>
+          <span>More</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== GOALS ===== -->
+    <div class="page" id="page-goals">
+      <div style="display:flex;gap:10px;margin-bottom:20px;align-items:center;">
+        <div style="flex:1;font-size:13px;color:var(--text2);">Set long-term goals, add milestones, and track your progress.</div>
+        <button class="btn btn-primary btn-sm" onclick="openGoalModal()">+ New Goal</button>
+      </div>
+      <div id="goalList"></div>
+    </div>
+
+    <!-- ===== QUICK LINKS ===== -->
+    <div class="page" id="page-links">
+      <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;">
+        <input type="text" id="linkSearch" placeholder="Search resources…" style="max-width:260px;" oninput="renderLinks()"/>
+        <button class="btn btn-primary btn-sm" onclick="openLinkModal()">+ Add Link</button>
+      </div>
+      <div id="linksContent"></div>
+    </div>
+
+  </div>
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MODALS -->
+<div class="modal-overlay" id="quickAddModal">
+  <div class="modal">
+    <div class="modal-title">⚡ Quick Add</div>
+    <div class="modal-row"><label>Task Title</label><input type="text" id="qa_title" placeholder="Enter task…"/></div>
+    <div class="modal-row"><label>Priority</label>
+      <select id="qa_priority"><option value="high">🔴 High</option><option value="med" selected>🟡 Medium</option><option value="low">🟢 Low</option></select></div>
+    <div class="modal-row"><label>Due Date</label><input type="date" id="qa_due"/></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('quickAddModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="quickAddFromModal()">Add Task</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="todoModal">
+  <div class="modal">
+    <div class="modal-title">📝 New Task</div>
+    <div class="modal-row"><label>Title *</label><input type="text" id="m_title" placeholder="Task title…"/></div>
+    <div class="modal-row"><label>Description</label><textarea id="m_desc" placeholder="Optional description…"></textarea></div>
+    <div class="modal-row"><label>Priority</label>
+      <select id="m_priority"><option value="high">🔴 High</option><option value="med" selected>🟡 Medium</option><option value="low">🟢 Low</option></select></div>
+    <div class="modal-row"><label>Tag</label>
+      <select id="m_tag"><option value="">No Tag</option><option value="work">Work</option><option value="personal">Personal</option><option value="dev">Dev</option><option value="urgent">Urgent</option></select></div>
+    <div class="modal-row"><label>Due Date</label><input type="date" id="m_due"/></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('todoModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addFromModal()">Add Task</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="habitModal">
+  <div class="modal">
+    <div class="modal-title">🔥 New Habit</div>
+    <div class="modal-row"><label>Habit Name</label><input type="text" id="h_name" placeholder="e.g. Morning Exercise"/></div>
+    <div class="modal-row"><label>Icon</label><input type="text" id="h_icon" placeholder="Emoji icon e.g. 🏃"/></div>
+    <div class="modal-row"><label>Goal (per week)</label><input type="number" id="h_goal" value="7" min="1" max="7"/></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('habitModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addHabit()">Add Habit</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="goalModal">
+  <div class="modal">
+    <div class="modal-title">🎯 New Goal</div>
+    <div class="modal-row"><label>Goal Title</label><input type="text" id="g_title" placeholder="e.g. Launch SaaS Product"/></div>
+    <div class="modal-row"><label>Icon</label><input type="text" id="g_icon" placeholder="Emoji icon e.g. 🚀"/></div>
+    <div class="modal-row"><label>Deadline</label><input type="date" id="g_deadline"/></div>
+    <div class="modal-row"><label>Milestones (one per line)</label><textarea id="g_milestones" placeholder="Research market&#10;Build MVP&#10;Launch beta&#10;Get 100 users"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('goalModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addGoal()">Add Goal</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="linkModal">
+  <div class="modal">
+    <div class="modal-title">🔗 Add Quick Link</div>
+    <div class="modal-row"><label>Name</label><input type="text" id="l_name" placeholder="e.g. MDN Web Docs"/></div>
+    <div class="modal-row"><label>URL</label><input type="text" id="l_url" placeholder="https://…"/></div>
+    <div class="modal-row"><label>Icon (emoji)</label><input type="text" id="l_icon" placeholder="e.g. 📚"/></div>
+    <div class="modal-row"><label>Category</label>
+      <select id="l_cat"><option value="Dev Resources">Dev Resources</option><option value="Design">Design</option><option value="Productivity">Productivity</option><option value="Learning">Learning</option><option value="Custom">Custom</option></select></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('linkModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addLink()">Add Link</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="snippetModal">
+  <div class="modal">
+    <div class="modal-title">📦 Add Snippet</div>
+    <div class="modal-row"><label>Title</label><input type="text" id="sn_title" placeholder="e.g. Debounce Function"/></div>
+    <div class="modal-row"><label>Language / Tag</label><input type="text" id="sn_lang" placeholder="e.g. JS, Python, CSS"/></div>
+    <div class="modal-row"><label>Code</label><textarea id="sn_code" style="font-family:var(--mono);font-size:12px;" placeholder="Paste your code here…"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('snippetModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addSnippet()">Save Snippet</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="bugModal">
+  <div class="modal">
+    <div class="modal-title">🐛 Report Bug</div>
+    <div class="modal-row"><label>Title</label><input type="text" id="bug_title" placeholder="Brief bug description…"/></div>
+    <div class="modal-row"><label>Category</label><input type="text" id="bug_cat" placeholder="e.g. Auth, UI, Backend"/></div>
+    <div class="modal-row"><label>Priority</label>
+      <select id="bug_priority"><option value="high">High</option><option value="med" selected>Medium</option><option value="low">Low</option></select></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('bugModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addBug()">Report</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="projectModal">
+  <div class="modal">
+    <div class="modal-title">📋 New Project</div>
+    <div class="modal-row"><label>Project Name</label><input type="text" id="pr_name" placeholder="e.g. E-Commerce App"/></div>
+    <div class="modal-row"><label>Tech Stack</label><input type="text" id="pr_stack" placeholder="e.g. React, Node.js, MongoDB"/></div>
+    <div class="modal-row"><label>Progress (%)</label><input type="number" id="pr_prog" value="0" min="0" max="100"/></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('projectModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addProject()">Create Project</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="apiModal">
+  <div class="modal">
+    <div class="modal-title">🔌 Add API Endpoint</div>
+    <div class="modal-row"><label>Method</label>
+      <select id="api_method"><option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option><option>PATCH</option></select></div>
+    <div class="modal-row"><label>Endpoint Path</label><input type="text" id="api_path" placeholder="e.g. /api/products"/></div>
+    <div class="modal-row"><label>Description</label><input type="text" id="api_desc" placeholder="What does this endpoint do?"/></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('apiModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addApi()">Add Endpoint</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ===========================
+// STATE
+// ===========================
+let state = {
+  todos: JSON.parse(localStorage.getItem('pf_todos')||'[]'),
+  notes: JSON.parse(localStorage.getItem('pf_notes')||'[]'),
+  habits: JSON.parse(localStorage.getItem('pf_habits')||'[]'),
+  goals: JSON.parse(localStorage.getItem('pf_goals')||'[]'),
+  links: JSON.parse(localStorage.getItem('pf_links')||'[]'),
+  pomoDone: parseInt(localStorage.getItem('pf_pomo')||'0'),
+  currentPage: 'dashboard',
+  todoFilter: 'all',
+  activeTodoId: null,
+  pendingSubtasks: [],
+  activeNoteId: null,
+  devTab: 'snippets',
+  selectedTechs: [],
+  pomoState: {running:false,mode:'focus',timeLeft:25*60,total:25*60,sessions:0,log:[]},
+  pomoInterval: null,
+};
+
+function save(){
+  localStorage.setItem('pf_todos',JSON.stringify(state.todos));
+  localStorage.setItem('pf_notes',JSON.stringify(state.notes));
+  localStorage.setItem('pf_habits',JSON.stringify(state.habits));
+  localStorage.setItem('pf_goals',JSON.stringify(state.goals));
+  localStorage.setItem('pf_links',JSON.stringify(state.links));
+  localStorage.setItem('pf_pomo',state.pomoDone);
+}
+
+// ===========================
+// NAVIGATION
+// ===========================
+const pageTitles={dashboard:'Dashboard',todo:'To-Do List',devhelper:'App Dev Helper',pomodoro:'Pomodoro Timer',notes:'Notes',habits:'Habit Tracker',goals:'Goal Planner',links:'Quick Links'};
+const topbarLabels={dashboard:'+ Quick Add',todo:'+ New Task',devhelper:'+ Snippet',pomodoro:'Start Focus',notes:'+ New Note',habits:'+ Habit',goals:'+ New Goal',links:'+ Add Link'};
+
+function navigate(page, el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if(el) el.classList.add('active');
+  document.getElementById('pageTitle').textContent = pageTitles[page]||page;
+  state.currentPage = page;
+  if(page==='dashboard') refreshDashboard();
+  if(page==='todo') renderTodos();
+  if(page==='notes') renderNotes();
+  if(page==='habits') renderHabits();
+  if(page==='goals') renderGoals();
+  if(page==='links') renderLinks();
+  if(page==='devhelper') initTechStack();
+  if(page==='habits') renderHeatmap();
+}
+
+function handleTopbarAction(){
+  const a=state.currentPage;
+  if(a==='dashboard') showModal('quickAddModal');
+  else if(a==='todo') openTodoModal();
+  else if(a==='notes') createNote();
+  else if(a==='habits') openHabitModal();
+  else if(a==='goals') openGoalModal();
+  else if(a==='links') openLinkModal();
+  else if(a==='devhelper') openSnippetModal();
+  else if(a==='pomodoro') togglePomo();
+}
+
+// ===========================
+// MODAL
+// ===========================
+function showModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
+
+// ===========================
+// TOAST
+// ===========================
+function toast(msg,type='success'){
+  const el=document.createElement('div');
+  el.className='toast '+(type);
+  el.innerHTML=`<span>${type==='success'?'✅':type==='warning'?'⚠️':'ℹ️'}</span><span>${msg}</span>`;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(()=>el.remove(),3000);
+}
+
+// ===========================
+// DASHBOARD
+// ===========================
+function refreshDashboard(){
+  const done=state.todos.filter(t=>t.done).length;
+  const pending=state.todos.filter(t=>!t.done).length;
+  const total=state.todos.length;
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('dashPending').textContent=pending;
+  document.getElementById('dashDone').textContent=done;
+  document.getElementById('dashProgress').style.width=pct+'%';
+  document.getElementById('dashPct').textContent=pct+'%';
+  document.getElementById('statDone').textContent=done;
+  document.getElementById('statFocus').textContent=state.pomoDone;
+  document.getElementById('statNotes').textContent=state.notes.length;
+  document.getElementById('todoBadge').textContent=pending;
+
+  const upcoming=state.todos.filter(t=>!t.done).slice(0,4);
+  const el=document.getElementById('dashTasks');
+  if(upcoming.length===0){el.innerHTML='<div class="empty-state"><div class="empty-icon">✨</div><p>No tasks yet. Add one!</p></div>';return;}
+  el.innerHTML=upcoming.map(t=>`
+    <div class="activity-item">
+      <div class="activity-icon" style="background:${t.priority==='high'?'rgba(255,94,94,.15)':t.priority==='med'?'rgba(245,166,35,.15)':'rgba(34,211,160,.15)'};font-size:14px;">
+        ${t.priority==='high'?'🔴':t.priority==='med'?'🟡':'🟢'}
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:500;">${t.title}</div>
+        ${t.due?`<div style="font-size:11px;color:var(--text3);">${t.due}</div>`:''}
+      </div>
+      ${t.tag?`<span class="tag tag-blue">${t.tag}</span>`:''}
+    </div>`).join('');
+}
+
+// ===========================
+// TO-DO
+// ===========================
+function openTodoModal(){showModal('todoModal');}
+function closeTodoForm(){document.getElementById('todoAddForm').style.display='none';state.pendingSubtasks=[];}
+
+function addFromModal(){
+  const title=document.getElementById('m_title').value.trim();
+  if(!title){toast('Please enter a task title','warning');return;}
+  state.todos.unshift({
+    id:Date.now(),title,
+    desc:document.getElementById('m_desc').value,
+    priority:document.getElementById('m_priority').value,
+    tag:document.getElementById('m_tag').value,
+    due:document.getElementById('m_due').value,
+    done:false,subtasks:[],created:new Date().toISOString()
+  });
+  save();renderTodos();refreshDashboard();
+  closeModal('todoModal');
+  ['m_title','m_desc','m_due'].forEach(id=>document.getElementById(id).value='');
+  toast('Task added!');
+}
+
+function quickAddTask(){
+  const title=document.getElementById('quickTaskInput').value.trim();
+  if(!title){toast('Enter a task first','warning');return;}
+  state.todos.unshift({
+    id:Date.now(),title,
+    priority:document.getElementById('quickPriority').value,
+    due:document.getElementById('quickDue').value,
+    desc:'',tag:'',done:false,subtasks:[],created:new Date().toISOString()
+  });
+  save();refreshDashboard();
+  document.getElementById('quickTaskInput').value='';
+  toast('Task added!');
+}
+
+function quickAddFromModal(){
+  const title=document.getElementById('qa_title').value.trim();
+  if(!title){toast('Please enter a task title','warning');return;}
+  state.todos.unshift({
+    id:Date.now(),title,
+    priority:document.getElementById('qa_priority').value,
+    due:document.getElementById('qa_due').value,
+    desc:'',tag:'',done:false,subtasks:[],created:new Date().toISOString()
+  });
+  save();refreshDashboard();renderTodos();
+  closeModal('quickAddModal');
+  document.getElementById('qa_title').value='';
+  toast('Task added!');
+}
+
+let todoFilterState='all';
+function setFilter(f,el){
+  todoFilterState=f;
+  document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderTodos();
+}
+
+function renderTodos(){
+  const search=document.getElementById('todoSearch')?.value.toLowerCase()||'';
+  const pf=document.getElementById('priorityFilter')?.value||'';
+  const tf=document.getElementById('tagFilter')?.value||'';
+  let todos=state.todos.filter(t=>{
+    if(todoFilterState==='active'&&t.done)return false;
+    if(todoFilterState==='done'&&!t.done)return false;
+    if(search&&!t.title.toLowerCase().includes(search))return false;
+    if(pf&&t.priority!==pf)return false;
+    if(tf&&t.tag!==tf)return false;
+    return true;
+  });
+  document.getElementById('countAll').textContent=state.todos.length;
+  document.getElementById('countActive').textContent=state.todos.filter(t=>!t.done).length;
+  document.getElementById('countDone').textContent=state.todos.filter(t=>t.done).length;
+  document.getElementById('todoBadge').textContent=state.todos.filter(t=>!t.done).length;
+
+  const el=document.getElementById('todoList');
+  if(todos.length===0){el.innerHTML='<div class="empty-state"><div class="empty-icon">✅</div><p>No tasks here!</p></div>';return;}
+  el.innerHTML=todos.map(t=>{
+    const pc={high:'p-high',med:'p-med',low:'p-low'};
+    const tc={work:'tag-blue',personal:'tag-purple',dev:'tag-teal',urgent:'tag-red'};
+    return `<div class="todo-item${t.done?' done':''}" id="todo-${t.id}">
+      <div class="priority-dot ${pc[t.priority]||'p-med'}"></div>
+      <div class="todo-check${t.done?' checked':''}" onclick="toggleTodo(${t.id})">${t.done?'✓':''}</div>
+      <div class="todo-body">
+        <div class="todo-title">${t.title}</div>
+        <div class="todo-meta">
+          ${t.due?`<span>📅 ${t.due}</span>`:''}
+          ${t.tag?`<span class="tag ${tc[t.tag]||'tag-blue'}">${t.tag}</span>`:''}
+          ${t.desc?`<span style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.desc}</span>`:''}
+        </div>
+        ${t.subtasks&&t.subtasks.length?`<div class="subtask-list">${t.subtasks.map(s=>`<div class="subtask-item"><span style="color:var(--accent3);">•</span>${s}</div>`).join('')}</div>`:''}
+      </div>
+      <div class="todo-actions">
+        <button class="icon-btn" onclick="deleteTodo(${t.id})" title="Delete">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleTodo(id){
+  const t=state.todos.find(x=>x.id===id);
+  if(t){t.done=!t.done;save();renderTodos();refreshDashboard();}
+}
+function deleteTodo(id){
+  state.todos=state.todos.filter(x=>x.id!==id);
+  save();renderTodos();refreshDashboard();toast('Task deleted');
+}
+function clearDone(){
+  state.todos=state.todos.filter(t=>!t.done);
+  save();renderTodos();refreshDashboard();toast('Completed tasks cleared');
+}
+function addSubtask(){
+  const inp=document.getElementById('newSubtask');
+  const v=inp.value.trim();
+  if(!v)return;
+  state.pendingSubtasks.push(v);
+  inp.value='';
+  document.getElementById('subtaskPreview').innerHTML=state.pendingSubtasks.map(s=>`<div class="subtask-item"><span style="color:var(--accent3);">•</span>${s}</div>`).join('');
+}
+function saveTodo(){
+  const title=document.getElementById('newTodoTitle').value.trim();
+  if(!title){toast('Enter a task title','warning');return;}
+  state.todos.unshift({
+    id:Date.now(),title,
+    desc:document.getElementById('newTodoDesc').value,
+    priority:document.getElementById('newTodoPriority').value,
+    tag:document.getElementById('newTodoTag').value,
+    due:document.getElementById('newTodoDue').value,
+    done:false,subtasks:[...state.pendingSubtasks],created:new Date().toISOString()
+  });
+  state.pendingSubtasks=[];
+  save();renderTodos();refreshDashboard();closeTodoForm();toast('Task added!');
+}
+function openTodoModal(){showModal('todoModal');}
+
+// ===========================
+// POMODORO
+// ===========================
+const pomoDurations={focus:25*60,short:5*60,long:15*60};
+function setPomoMode(mode,el){
+  document.querySelectorAll('.pomo-mode-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  clearInterval(state.pomoInterval);
+  state.pomoInterval=null;
+  state.pomoState.running=false;
+  state.pomoState.mode=mode;
+  const dur={focus:parseInt(document.getElementById('focusDur').value)*60,short:parseInt(document.getElementById('shortDur').value)*60,long:parseInt(document.getElementById('longDur').value)*60};
+  state.pomoState.timeLeft=dur[mode];
+  state.pomoState.total=dur[mode];
+  document.getElementById('pomoPlayBtn').textContent='▶';
+  document.getElementById('pomoModeLabel').textContent=mode==='focus'?'FOCUS':mode==='short'?'SHORT BREAK':'LONG BREAK';
+  updatePomoUI();
+}
+function updateDurations(){setPomoMode(state.pomoState.mode,document.querySelector('.pomo-mode-btn.active'));}
+function togglePomo(){
+  if(state.pomoState.running){
+    clearInterval(state.pomoInterval);state.pomoInterval=null;
+    state.pomoState.running=false;
+    document.getElementById('pomoPlayBtn').textContent='▶';
+  }else{
+    state.pomoState.running=true;
+    document.getElementById('pomoPlayBtn').textContent='⏸';
+    state.pomoInterval=setInterval(tickPomo,1000);
+  }
+}
+function tickPomo(){
+  if(state.pomoState.timeLeft<=0){
+    clearInterval(state.pomoInterval);state.pomoInterval=null;
+    state.pomoState.running=false;
+    document.getElementById('pomoPlayBtn').textContent='▶';
+    if(state.pomoState.mode==='focus'){
+      state.pomoState.sessions++;
+      state.pomoDone++;
+      const task=document.getElementById('pomoTask').value||'Focus session';
+      state.pomoState.log.unshift({task,duration:state.pomoState.total/60,time:new Date().toLocaleTimeString()});
+      save();renderPomoLog();refreshDashboard();
+      toast('🍅 Focus session done! Time for a break.');
+      updatePomoSessions();
+    }else{toast('Break over! Back to work 💪');}
+    return;
+  }
+  state.pomoState.timeLeft--;
+  updatePomoUI();
+}
+function resetPomo(){
+  clearInterval(state.pomoInterval);state.pomoInterval=null;
+  state.pomoState.running=false;
+  document.getElementById('pomoPlayBtn').textContent='▶';
+  const dur={focus:parseInt(document.getElementById('focusDur').value)*60,short:parseInt(document.getElementById('shortDur').value)*60,long:parseInt(document.getElementById('longDur').value)*60};
+  state.pomoState.timeLeft=dur[state.pomoState.mode];
+  state.pomoState.total=dur[state.pomoState.mode];
+  updatePomoUI();
+}
+function skipPomo(){resetPomo();toast('Session skipped');}
+function updatePomoUI(){
+  const t=state.pomoState.timeLeft;
+  const m=String(Math.floor(t/60)).padStart(2,'0');
+  const s=String(t%60).padStart(2,'0');
+  document.getElementById('pomoTime').textContent=`${m}:${s}`;
+  const pct=t/state.pomoState.total;
+  const circ=603;
+  document.getElementById('pomRing').style.strokeDashoffset=circ*(1-pct)+'';
+  const colors={focus:'var(--accent)',short:'var(--accent3)',long:'var(--accent4)'};
+  document.getElementById('pomRing').style.stroke=colors[state.pomoState.mode];
+}
+function updatePomoSessions(){
+  const el=document.getElementById('pomoSessions');
+  const count=4;
+  el.innerHTML=Array.from({length:count},(_,i)=>`<div class="pomo-dot${i<state.pomoState.sessions%count?' done':''}"></div>`).join('');
+}
+function renderPomoLog(){
+  const el=document.getElementById('pomoLog');
+  if(state.pomoState.log.length===0){el.innerHTML='<div style="text-align:center;color:var(--text3);font-size:12.5px;padding:20px 0;">No sessions yet. Start focusing!</div>';return;}
+  el.innerHTML=state.pomoState.log.slice(0,8).map(l=>`
+    <div class="pomo-log-item">
+      <span style="color:var(--accent);">🍅</span>
+      <span style="flex:1;">${l.task}</span>
+      <span style="color:var(--text3);">${l.duration}min · ${l.time}</span>
+    </div>`).join('');
+  document.getElementById('totalSessions').textContent=state.pomoDone;
+  document.getElementById('totalFocusTime').textContent=(state.pomoDone*parseInt(document.getElementById('focusDur').value))+' min';
+}
+
+// ===========================
+// NOTES
+// ===========================
+function renderNotes(){
+  const search=document.getElementById('noteSearch')?.value.toLowerCase()||'';
+  const filtered=state.notes.filter(n=>!search||n.title.toLowerCase().includes(search)||n.content.toLowerCase().includes(search));
+  const el=document.getElementById('notesList');
+  if(filtered.length===0){el.innerHTML='<div class="empty-state" style="padding:20px 0;"><p>No notes yet. Create one!</p></div>';return;}
+  el.innerHTML=filtered.map(n=>`
+    <div class="note-card${n.id===state.activeNoteId?' active':''}" onclick="openNote(${n.id})">
+      <div class="note-card-title">${n.pinned?'📌 ':''} ${n.title||'Untitled'}</div>
+      <div class="note-card-preview">${n.content||'Empty note…'}</div>
+      <div class="note-date">${new Date(n.updated).toLocaleDateString()}</div>
+    </div>`).join('');
+}
+function createNote(){
+  const note={id:Date.now(),title:'',content:'',pinned:false,updated:new Date().toISOString()};
+  state.notes.unshift(note);
+  state.activeNoteId=note.id;
+  save();renderNotes();loadNoteEditor(note);toast('Note created');
+}
+function openNote(id){
+  state.activeNoteId=id;
+  const note=state.notes.find(n=>n.id===id);
+  if(note)loadNoteEditor(note);
+  renderNotes();
+}
+function loadNoteEditor(note){
+  document.getElementById('noteTitle').value=note.title||'';
+  document.getElementById('noteContent').value=note.content||'';
+  document.getElementById('pinBtn').textContent=note.pinned?'📌 Unpin':'📌 Pin';
+}
+function saveNote(){
+  const note=state.notes.find(n=>n.id===state.activeNoteId);
+  if(!note){toast('Select or create a note first','warning');return;}
+  note.title=document.getElementById('noteTitle').value;
+  note.content=document.getElementById('noteContent').value;
+  note.updated=new Date().toISOString();
+  save();renderNotes();toast('Note saved!');
+}
+function pinNote(){
+  const note=state.notes.find(n=>n.id===state.activeNoteId);
+  if(!note)return;
+  note.pinned=!note.pinned;
+  save();renderNotes();
+  document.getElementById('pinBtn').textContent=note.pinned?'📌 Unpin':'📌 Pin';
+  toast(note.pinned?'Note pinned!':'Note unpinned');
+}
+function deleteNote(){
+  if(!state.activeNoteId)return;
+  state.notes=state.notes.filter(n=>n.id!==state.activeNoteId);
+  state.activeNoteId=null;
+  save();renderNotes();
+  document.getElementById('noteTitle').value='';
+  document.getElementById('noteContent').value='';
+  toast('Note deleted');
+}
+function fmtNote(before,after){
+  const ta=document.getElementById('noteContent');
+  const s=ta.selectionStart,e=ta.selectionEnd;
+  const sel=ta.value.substring(s,e);
+  ta.value=ta.value.substring(0,s)+before+sel+after+ta.value.substring(e);
+  ta.focus();ta.setSelectionRange(s+before.length,e+before.length);
+}
+
+// ===========================
+// HABITS
+// ===========================
+function renderHabits(){
+  const el=document.getElementById('habitList');
+  const days=['M','T','W','T','F','S','S'];
+  if(state.habits.length===0){el.innerHTML='<div class="empty-state"><p>No habits yet. Add your first!</p></div>';return;}
+  el.innerHTML=state.habits.map(h=>{
+    const today=new Date().getDay();
+    return `<div class="habit-item">
+      <div class="habit-icon">${h.icon||'⭐'}</div>
+      <div>
+        <div class="habit-name">${h.name}</div>
+        <div class="habit-streak">🔥 ${h.streak||0} day streak</div>
+      </div>
+      <div class="habit-week">
+        ${days.map((d,i)=>`<div class="habit-day${(h.done||[]).includes(i)?' done':''}${i===today-1?' today':''}" onclick="toggleHabitDay(${h.id},${i})">${d}</div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+  // dashboard mini
+  const dashEl=document.getElementById('dashHabits');
+  if(dashEl){
+    if(state.habits.length===0){dashEl.innerHTML='<div class="empty-state" style="padding:20px 0;"><p>No habits tracked yet.</p></div>';return;}
+    dashEl.innerHTML=state.habits.slice(0,3).map(h=>`
+      <div class="activity-item">
+        <div class="activity-icon" style="background:var(--bg3);">${h.icon||'⭐'}</div>
+        <div style="flex:1;"><div style="font-size:13px;">${h.name}</div></div>
+        <span style="font-family:var(--mono);font-size:12px;color:var(--accent);">🔥${h.streak||0}</span>
+      </div>`).join('');
+  }
+}
+function toggleHabitDay(id,day){
+  const h=state.habits.find(x=>x.id===id);
+  if(!h)return;
+  if(!h.done)h.done=[];
+  const i=h.done.indexOf(day);
+  if(i===-1){h.done.push(day);h.streak=(h.streak||0)+1;}
+  else{h.done.splice(i,1);h.streak=Math.max(0,(h.streak||1)-1);}
+  save();renderHabits();
+}
+function openHabitModal(){showModal('habitModal');}
+function addHabit(){
+  const name=document.getElementById('h_name').value.trim();
+  if(!name){toast('Enter a habit name','warning');return;}
+  state.habits.push({id:Date.now(),name,icon:document.getElementById('h_icon').value||'⭐',goal:parseInt(document.getElementById('h_goal').value)||7,done:[],streak:0});
+  save();renderHabits();closeModal('habitModal');
+  document.getElementById('h_name').value='';document.getElementById('h_icon').value='';
+  toast('Habit added!');
+}
+function renderHeatmap(){
+  const el=document.getElementById('heatmap');
+  const cells=Array.from({length:365},(_,i)=>{
+    const r=Math.random();
+    let cls='';
+    if(r>.9)cls='l4';else if(r>.7)cls='l3';else if(r>.5)cls='l2';else if(r>.3)cls='l1';
+    return `<div class="heat-cell ${cls}" title="Day ${i+1}"></div>`;
+  }).join('');
+  el.innerHTML=cells;
+}
+
+// ===========================
+// GOALS
+// ===========================
+function renderGoals(){
+  const el=document.getElementById('goalList');
+  if(state.goals.length===0){el.innerHTML='<div class="empty-state"><div class="empty-icon">🎯</div><p>No goals yet. Set one!</p></div>';return;}
+  el.innerHTML=state.goals.map(g=>{
+    const total=g.milestones.length;
+    const done=g.milestones.filter(m=>m.done).length;
+    const pct=total?Math.round(done/total*100):0;
+    const colors=['linear-gradient(90deg,var(--accent),var(--accent2))','linear-gradient(90deg,var(--accent3),var(--blue))','linear-gradient(90deg,var(--accent4),var(--accent3))'];
+    const color=colors[state.goals.indexOf(g)%colors.length];
+    return `<div class="goal-card">
+      <div class="goal-header">
+        <div class="goal-icon">${g.icon||'🎯'}</div>
+        <div>
+          <div class="goal-title">${g.title}</div>
+          ${g.deadline?`<div class="goal-deadline">📅 Deadline: ${g.deadline}</div>`:''}
+        </div>
+        <button class="icon-btn" style="margin-left:auto;" onclick="deleteGoal(${g.id})">🗑️</button>
+      </div>
+      <div class="goal-progress-row">
+        <div class="goal-progress-bar"><div class="goal-progress-fill" style="width:${pct}%;background:${color};"></div></div>
+        <div class="goal-pct" style="color:var(--accent);">${pct}%</div>
+      </div>
+      <div>${g.milestones.map((m,i)=>`
+        <div class="milestone-item">
+          <div class="milestone-check${m.done?' done':''}" onclick="toggleMilestone(${g.id},${i})">${m.done?'✓':''}</div>
+          <span style="${m.done?'text-decoration:line-through;color:var(--text3)':''}">${m.text}</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+function openGoalModal(){showModal('goalModal');}
+function addGoal(){
+  const title=document.getElementById('g_title').value.trim();
+  if(!title){toast('Enter a goal title','warning');return;}
+  const milestones=document.getElementById('g_milestones').value.split('\n').filter(m=>m.trim()).map(m=>({text:m.trim(),done:false}));
+  state.goals.push({id:Date.now(),title,icon:document.getElementById('g_icon').value||'🎯',deadline:document.getElementById('g_deadline').value,milestones});
+  save();renderGoals();closeModal('goalModal');
+  ['g_title','g_icon','g_deadline','g_milestones'].forEach(id=>document.getElementById(id).value='');
+  toast('Goal created!');
+}
+function toggleMilestone(gid,idx){
+  const g=state.goals.find(x=>x.id===gid);
+  if(g){g.milestones[idx].done=!g.milestones[idx].done;save();renderGoals();}
+}
+function deleteGoal(id){state.goals=state.goals.filter(g=>g.id!==id);save();renderGoals();toast('Goal deleted');}
+
+// ===========================
+// QUICK LINKS
+// ===========================
+const defaultLinks=[
+  {id:1,name:'MDN Web Docs',url:'https://developer.mozilla.org',icon:'📚',cat:'Dev Resources'},
+  {id:2,name:'GitHub',url:'https://github.com',icon:'🐱',cat:'Dev Resources'},
+  {id:3,name:'Stack Overflow',url:'https://stackoverflow.com',icon:'🔶',cat:'Dev Resources'},
+  {id:4,name:'Can I Use',url:'https://caniuse.com',icon:'🌐',cat:'Dev Resources'},
+  {id:5,name:'Figma',url:'https://figma.com',icon:'🎨',cat:'Design'},
+  {id:6,name:'Coolors',url:'https://coolors.co',icon:'🎨',cat:'Design'},
+  {id:7,name:'Undraw',url:'https://undraw.co',icon:'🖼️',cat:'Design'},
+  {id:8,name:'Google Fonts',url:'https://fonts.google.com',icon:'🔤',cat:'Design'},
+  {id:9,name:'Notion',url:'https://notion.so',icon:'📓',cat:'Productivity'},
+  {id:10,name:'Trello',url:'https://trello.com',icon:'📋',cat:'Productivity'},
+  {id:11,name:'freeCodeCamp',url:'https://freecodecamp.org',icon:'💻',cat:'Learning'},
+  {id:12,name:'CSS Tricks',url:'https://css-tricks.com',icon:'✨',cat:'Learning'},
+];
+function renderLinks(){
+  const search=document.getElementById('linkSearch')?.value.toLowerCase()||'';
+  const all=[...defaultLinks,...state.links].filter(l=>!search||l.name.toLowerCase().includes(search)||l.cat.toLowerCase().includes(search));
+  const cats=[...new Set(all.map(l=>l.cat))];
+  const el=document.getElementById('linksContent');
+  el.innerHTML=cats.map(cat=>{
+    const items=all.filter(l=>l.cat===cat);
+    return `<div class="link-cat">${cat}</div>
+      <div class="link-grid">${items.map(l=>`
+        <a href="${l.url}" target="_blank" class="link-card">
+          <div class="link-icon">${l.icon||'🔗'}</div>
+          <div class="link-name">${l.name}</div>
+          <div class="link-url">${l.url.replace('https://','')}</div>
+        </a>`).join('')}
+      </div>`;
+  }).join('');
+}
+function openLinkModal(){showModal('linkModal');}
+function addLink(){
+  const name=document.getElementById('l_name').value.trim();
+  if(!name){toast('Enter a link name','warning');return;}
+  state.links.push({id:Date.now(),name,url:document.getElementById('l_url').value,icon:document.getElementById('l_icon').value||'🔗',cat:document.getElementById('l_cat').value});
+  save();renderLinks();closeModal('linkModal');
+  ['l_name','l_url','l_icon'].forEach(id=>document.getElementById(id).value='');
+  toast('Link added!');
+}
+
+// ===========================
+// DEV HELPER
+// ===========================
+function setDevTab(tab,el){
+  document.querySelectorAll('[id^="devtab-"]').forEach(d=>d.style.display='none');
+  document.getElementById('devtab-'+tab).style.display='';
+  document.querySelectorAll('#page-devhelper .filter-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  state.devTab=tab;
+  if(tab==='techstack')initTechStack();
+}
+function copyCode(btn){
+  const box=btn.parentElement;
+  const code=box.innerText.replace('Copy','').trim();
+  navigator.clipboard.writeText(code).then(()=>{btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',1500);});
+}
+const codeTemplates={
+  api:(name)=>`<span class="code-keyword">const</span> express = require(<span class="code-str">'express'</span>);
+<span class="code-keyword">const</span> router = express.Router();
+
+<span class="code-cmt">// GET /${name.toLowerCase()}</span>
+router.get(<span class="code-str">'/'</span>, <span class="code-keyword">async</span> (req, res) => {
+  <span class="code-keyword">try</span> {
+    <span class="code-keyword">const</span> data = <span class="code-keyword">await</span> ${name}.<span class="code-fn">find</span>({});
+    res.<span class="code-fn">json</span>({ success: <span class="code-keyword">true</span>, data });
+  } <span class="code-keyword">catch</span> (err) {
+    res.<span class="code-fn">status</span>(500).<span class="code-fn">json</span>({ error: err.message });
+  }
+});
+
+module.exports = router;`,
+  component:(name)=>`<span class="code-keyword">import</span> React, { useState } <span class="code-keyword">from</span> <span class="code-str">'react'</span>;
+
+<span class="code-keyword">const</span> <span class="code-fn">${name||'MyComponent'}</span> = ({ title }) => {
+  <span class="code-keyword">const</span> [state, setState] = useState(<span class="code-keyword">null</span>);
+
+  <span class="code-keyword">return</span> (
+    &lt;div className=<span class="code-str">"${(name||'component').toLowerCase()}"</span>&gt;
+      &lt;h2&gt;{title}&lt;/h2&gt;
+    &lt;/div&gt;
+  );
+};
+
+<span class="code-keyword">export default</span> <span class="code-fn">${name||'MyComponent'}</span>;`,
+  hook:(name)=>`<span class="code-keyword">import</span> { useState, useEffect } <span class="code-keyword">from</span> <span class="code-str">'react'</span>;
+
+<span class="code-keyword">const</span> <span class="code-fn">use${name||'Custom'}</span> = (initialValue) => {
+  <span class="code-keyword">const</span> [data, setData] = useState(initialValue);
+  <span class="code-keyword">const</span> [loading, setLoading] = useState(<span class="code-keyword">false</span>);
+  <span class="code-keyword">const</span> [error, setError] = useState(<span class="code-keyword">null</span>);
+
+  useEffect(() => {
+    <span class="code-cmt">// side effect logic</span>
+  }, []);
+
+  <span class="code-keyword">return</span> { data, loading, error };
+};
+
+<span class="code-keyword">export default</span> <span class="code-fn">use${name||'Custom'}</span>;`,
+  model:(name)=>`<span class="code-keyword">const</span> mongoose = require(<span class="code-str">'mongoose'</span>);
+
+<span class="code-keyword">const</span> ${(name||'Item').toLowerCase()}Schema = <span class="code-keyword">new</span> mongoose.<span class="code-fn">Schema</span>({
+  name: { type: String, required: <span class="code-keyword">true</span> },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: Date,
+}, { timestamps: <span class="code-keyword">true</span> });
+
+module.exports = mongoose.<span class="code-fn">model</span>(<span class="code-str">'${name||'Item'}'</span>, ${(name||'Item').toLowerCase()}Schema);`,
+  auth:()=>`<span class="code-keyword">const</span> jwt = require(<span class="code-str">'jsonwebtoken'</span>);
+
+<span class="code-keyword">const</span> <span class="code-fn">authMiddleware</span> = (req, res, next) => {
+  <span class="code-keyword">const</span> token = req.headers[<span class="code-str">'authorization'</span>]?.split(<span class="code-str">' '</span>)[1];
+  <span class="code-keyword">if</span> (!token) <span class="code-keyword">return</span> res.<span class="code-fn">status</span>(401).<span class="code-fn">json</span>({ error: <span class="code-str">'Unauthorized'</span> });
+  <span class="code-keyword">try</span> {
+    req.user = jwt.<span class="code-fn">verify</span>(token, process.env.JWT_SECRET);
+    <span class="code-fn">next</span>();
+  } <span class="code-keyword">catch</span> { res.<span class="code-fn">status</span>(403).<span class="code-fn">json</span>({ error: <span class="code-str">'Invalid token'</span> }); }
+};
+module.exports = <span class="code-fn">authMiddleware</span>;`
+};
+function generateCode(){
+  const type=document.getElementById('codeGenType').value;
+  const name=document.getElementById('codeGenName').value||'Item';
+  document.getElementById('generatedCode').innerHTML=codeTemplates[type](name)+'<button class="snippet-copy" onclick="copyCode(this)">Copy</button>';
+  toast('Template generated!');
+}
+const techData={
+  Frontend:['React','Vue.js','Angular','Next.js','Svelte','Nuxt.js','Tailwind CSS','Bootstrap'],
+  Backend:['Node.js','Express','Django','FastAPI','Laravel','Spring Boot','Ruby on Rails','NestJS'],
+  Database:['MongoDB','PostgreSQL','MySQL','Redis','SQLite','Supabase','Firebase','DynamoDB'],
+  'DevOps & Cloud':['Docker','Kubernetes','AWS','GCP','Azure','Vercel','Netlify','GitHub Actions'],
+};
+function initTechStack(){
+  Object.entries(techData).forEach(([cat,techs])=>{
+    const id='tech'+cat.replace(/[^a-zA-Z]/g,'');
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.innerHTML=techs.map(t=>`<span class="tech-pill${state.selectedTechs.includes(t)?' selected':''}" onclick="toggleTech('${t}',this)">${t}</span>`).join('');
+  });
+}
+function toggleTech(tech,el){
+  const i=state.selectedTechs.indexOf(tech);
+  if(i===-1)state.selectedTechs.push(tech);
+  else state.selectedTechs.splice(i,1);
+  el.classList.toggle('selected');
+  document.getElementById('selectedStack').textContent=state.selectedTechs.length?state.selectedTechs.join(' + '):'None selected';
+}
+function copyStack(){
+  if(!state.selectedTechs.length){toast('No techs selected','warning');return;}
+  navigator.clipboard.writeText(state.selectedTechs.join(', ')).then(()=>toast('Stack copied!'));
+}
+function openSnippetModal(){showModal('snippetModal');}
+function addSnippet(){
+  const title=document.getElementById('sn_title').value.trim();
+  if(!title){toast('Enter snippet title','warning');return;}
+  const lang=document.getElementById('sn_lang').value||'Code';
+  const code=document.getElementById('sn_code').value;
+  const el=document.getElementById('customSnippets');
+  const div=document.createElement('div');div.className='snippet-item';div.style.marginTop='10px';
+  div.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+    <span style="font-size:12.5px;font-weight:700;font-family:var(--font);">${title}</span>
+    <span class="tag tag-amber">${lang}</span>
+  </div>
+  <div class="snippet-box" style="position:relative;">${code.replace(/</g,'&lt;')}<button class="snippet-copy" onclick="copyCode(this)">Copy</button></div>`;
+  el.appendChild(div);
+  closeModal('snippetModal');
+  ['sn_title','sn_lang','sn_code'].forEach(id=>document.getElementById(id).value='');
+  toast('Snippet saved!');
+}
+function openBugModal(){showModal('bugModal');}
+function addBug(){
+  const title=document.getElementById('bug_title').value.trim();
+  if(!title){toast('Enter bug title','warning');return;}
+  const prio=document.getElementById('bug_priority').value;
+  const cat=document.getElementById('bug_cat').value||'General';
+  const el=document.getElementById('customBugs');
+  const div=document.createElement('div');div.className='bug-item';
+  div.innerHTML=`<div class="bug-status status-open"></div>
+    <div style="flex:1;"><div style="font-size:13.5px;font-weight:600;">${title}</div>
+    <div style="font-size:11.5px;color:var(--text3);">${cat} · ${prio} Priority · Reported now</div></div>
+    <span class="tag tag-red">Open</span>`;
+  el.appendChild(div);
+  const openCount=document.getElementById('bugOpen');
+  openCount.textContent=parseInt(openCount.textContent)+1;
+  closeModal('bugModal');
+  ['bug_title','bug_cat'].forEach(id=>document.getElementById(id).value='');
+  toast('Bug reported!');
+}
+function openProjectModal(){showModal('projectModal');}
+function addProject(){
+  const name=document.getElementById('pr_name').value.trim();
+  if(!name){toast('Enter project name','warning');return;}
+  const stack=document.getElementById('pr_stack').value;
+  const prog=parseInt(document.getElementById('pr_prog').value)||0;
+  const el=document.getElementById('customProjects');
+  const div=document.createElement('div');
+  div.style.cssText='display:flex;align-items:center;gap:10px;margin-top:12px;';
+  div.innerHTML=`<span style="font-size:16px;">💼</span>
+    <div style="flex:1;">
+      <div style="font-size:13.5px;font-weight:700;font-family:var(--font);">${name}</div>
+      <div style="font-size:11.5px;color:var(--text3);">${stack}</div>
+      <div class="progress-bar" style="margin-top:6px;"><div class="progress-fill" style="width:${prog}%;"></div></div>
+    </div>
+    <span style="font-family:var(--mono);font-size:12px;color:var(--accent);">${prog}%</span>`;
+  el.appendChild(div);
+  closeModal('projectModal');
+  ['pr_name','pr_stack'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pr_prog').value=0;
+  toast('Project created!');
+}
+function openApiModal(){showModal('apiModal');}
+function addApi(){
+  const path=document.getElementById('api_path').value.trim();
+  if(!path){toast('Enter endpoint path','warning');return;}
+  const method=document.getElementById('api_method').value;
+  const desc=document.getElementById('api_desc').value;
+  const methodColors={GET:'tag-green',POST:'tag-amber',PUT:'tag-blue',DELETE:'tag-red',PATCH:'tag-purple'};
+  const el=document.getElementById('customApis');
+  const div=document.createElement('div');
+  div.style.cssText='background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;';
+  div.innerHTML=`<span class="tag ${methodColors[method]||'tag-blue'}">${method}</span>
+    <span style="font-family:var(--mono);font-size:12px;">${path}</span>
+    <span style="margin-left:auto;font-size:11.5px;color:var(--text3);">${desc}</span>`;
+  el.appendChild(div);
+  closeModal('apiModal');
+  ['api_path','api_desc'].forEach(id=>document.getElementById(id).value='');
+  toast('Endpoint added!');
+}
+
+// ===========================
+// INIT
+// ===========================
+(function init(){
+  refreshDashboard();
+  renderTodos();
+  renderLinks();
+  renderHabits();
+  renderGoals();
+  renderNotes();
+  if(state.notes.length>0)openNote(state.notes[0].id);
+  // seed default habits if none
+  if(state.habits.length===0){
+    state.habits=[
+      {id:1,name:'Morning Exercise',icon:'🏃',goal:7,done:[],streak:3},
+      {id:2,name:'Read 30 mins',icon:'📖',goal:7,done:[0,2,4],streak:5},
+      {id:3,name:'Drink 8 Glasses',icon:'💧',goal:7,done:[0,1,2,3],streak:7},
+    ];
+    save();
+  }
+  if(state.goals.length===0){
+    state.goals=[
+      {id:1,title:'Launch SaaS Product',icon:'🚀',deadline:'2025-12-31',milestones:[
+        {text:'Research & validate idea',done:true},
+        {text:'Build MVP',done:true},
+        {text:'Beta launch',done:false},
+        {text:'Get first 100 users',done:false},
+        {text:'Reach profitability',done:false},
+      ]},
+    ];
+    save();
+  }
+  renderHabits();
+  renderGoals();
+  renderHeatmap();
+  // rebuild dashboard habits
+  const dashEl=document.getElementById('dashHabits');
+  if(dashEl&&state.habits.length){
+    dashEl.innerHTML=state.habits.slice(0,3).map(h=>`
+      <div class="activity-item">
+        <div class="activity-icon" style="background:var(--bg3);">${h.icon||'⭐'}</div>
+        <div style="flex:1;"><div style="font-size:13px;">${h.name}</div></div>
+        <span style="font-family:var(--mono);font-size:12px;color:var(--accent);">🔥${h.streak||0}</span>
+      </div>`).join('');
+  }
+  // dashboard notes
+  const pinnedNotes=state.notes.filter(n=>n.pinned).slice(0,3);
+  const dashNEl=document.getElementById('dashNotes');
+  if(dashNEl&&pinnedNotes.length){
+    dashNEl.innerHTML=pinnedNotes.map(n=>`
+      <div class="activity-item" onclick="navigate('notes',document.querySelector('.nav-item:nth-child(5)'));" style="cursor:pointer;">
+        <div class="activity-icon" style="background:rgba(167,139,250,.15);">📌</div>
+        <div style="flex:1;"><div style="font-size:13px;">${n.title||'Untitled'}</div><div style="font-size:11px;color:var(--text3);">${n.content?.substring(0,40)||''}…</div></div>
+      </div>`).join('');
+  }
+  // enter key shortcuts
+  document.getElementById('quickTaskInput').addEventListener('keydown',e=>{if(e.key==='Enter')quickAddTask();});
+  document.getElementById('m_title').addEventListener('keydown',e=>{if(e.key==='Enter')addFromModal();});
+})();
+</script>
+</body>
+</html>
